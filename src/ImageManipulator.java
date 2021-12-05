@@ -6,7 +6,9 @@ import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +33,17 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      */
     @Override
     public WritableImage loadImage(String filename) throws FileNotFoundException {
-        return null;
+        File image = new File(filename);
+        try(Scanner imageScanner = new Scanner(image)) {
+            if (imageScanner.next() != "P3") {
+                throw new IllegalArgumentException();
+            }
+            while(imageScanner.hasNext()) {
+
+            }
+        } catch (FileNotFoundException error) {
+
+        }
     }
 
     /**
@@ -97,10 +109,8 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
         for(int i = 0; i < pixels.length; i++) {
             for(int j = 0; j < pixels[1].length; j++) {
                 pixels[i][j] = image.getPixelReader().getColor(i,j);
-                int red = (int)(255-(pixels[i][j].getRed()*0.2989));
-                int green = (int)(255-(pixels[i][j].getGreen()*0.5870));
-                int blue = (int)(255-(pixels[i][j].getBlue()*0.1140));
-                image.getPixelWriter().setColor(i,j,Color.rgb(red,green,blue));
+                double intensity = pixels[i][j].getRed()*.2989 + pixels[i][j].getBlue()*.1140 + pixels[i][j].getGreen()*.5870;
+                image.getPixelWriter().setColor(i,j,Color.color(intensity,intensity,intensity));
             }
         }
         return image;
