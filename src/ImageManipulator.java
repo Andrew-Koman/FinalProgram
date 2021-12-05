@@ -8,9 +8,8 @@ import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.Scanner;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.Writer;
+import java.util.*;
 
 public class ImageManipulator extends Application implements ImageManipulatorInterface{
     private Stage stage = null;
@@ -31,16 +30,44 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      */
     @Override
     public WritableImage loadImage(String filename) throws FileNotFoundException {
-        File image = new File(filename);
-        try(Scanner imageScanner = new Scanner(image)) {
+        File imageFile = new File(filename);
+        Integer width, height, colorSpace;
+        try(Scanner imageScanner = new Scanner(imageFile)) {
             if (imageScanner.next() != "P3") {
                 throw new IllegalArgumentException();
             }
-            while(imageScanner.hasNext()) {
-
+            while(width == null || height == null || colorSpace == null) {
+                String next = imageScanner.next();
+                Scanner nextScanner = new Scanner(next);
+                if(next.charAt(0) == '#') {
+                    imageScanner.nextLine();
+                    break;
+                }
+                if(width == null) {
+                    width = nextScanner.nextInt();
+                } else if (height == null) {
+                    height = nextScanner.nextInt();
+                } else {
+                    colorSpace = nextScanner.nextInt();
+                }
             }
+            WritableImage image = new WritableImage(width,height);
+            try {
+                for(int i = 0; i < height; i++) {
+                    for(int j = 0; j < width; j++) {
+                        int red = imageScanner.nextInt()/colorSpace;
+                        int green = imageScanner.nextInt()/colorSpace;
+                        int blue = imageScanner.nextInt()/colorSpace;
+                        image.getPixelWriter().setColor(j,i,Color.rgb(red,green,blue));
+                    }
+                }
+            } catch (InputMismatchException exception) {
+                imageScanner.nextLine();
+            } catch (NoSuchElementException exception) {
+            }
+            return image;
         } catch (FileNotFoundException error) {
-
+            throw error;
         }
     }
 
