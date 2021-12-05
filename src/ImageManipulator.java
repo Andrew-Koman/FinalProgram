@@ -1,5 +1,6 @@
 import javafx.application.Application;
 import javafx.scene.image.WritableImage;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.io.FileNotFoundException;
@@ -51,7 +52,17 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      */
     @Override
     public WritableImage invertImage(WritableImage image) {
-        return null;
+        Color[][] pixels = new Color[(int)image.getHeight()][(int)image.getWidth()];
+        for(int i = 0; i < pixels.length; i++) {
+            for(int j = 0; j < pixels[1].length; j++) {
+                pixels[i][j] = image.getPixelReader().getColor(i,j);
+                int red = (int)(255-(pixels[i][j].getRed()*255));
+                int green = (int)(255-(pixels[i][j].getGreen()*255));
+                int blue = (int)(255-(pixels[i][j].getBlue()*255));
+                image.getPixelWriter().setColor(i,j,Color.rgb(red,green,blue));
+            }
+        }
+        return image;
     }
 
     /**
