@@ -1,22 +1,13 @@
 import javafx.application.Application;
-import javafx.scene.Group;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Scanner;
 
 public class ImageManipulator extends Application implements ImageManipulatorInterface{
-    private Stage stage = null;
-    private Scene scene = null;
-    private Group root = null;
-    private double width = 640,
-            height = 480;
     /**
      * Load the specified PPM image file.
      * The image file must be in the PPM P3 format
@@ -30,7 +21,15 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      */
     @Override
     public WritableImage loadImage(String filename) throws FileNotFoundException {
-        return null;
+        File image = new File(filename);
+        try(Scanner imageScanner = new Scanner(image)) {
+            if (imageScanner.next() != "P3") {
+                throw new IllegalArgumentException();
+            }
+
+        } catch (FileNotFoundException error) {
+
+        }
     }
 
     /**
@@ -145,8 +144,26 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      */
     @Override
     public WritableImage flipImage(WritableImage image) {
-        Color[][] ogImage = new Color[(int)image.getHeight()][(int)image.getWidth()];
-        return null;
+        Color[][] pixels = new Color[(int)image.getHeight()][(int)image.getWidth()];
+        for(int i = 0; i < pixels.length; i++) {
+            for(int j = 0; j < pixels[1].length; j++) {
+                pixels[i][j] = image.getPixelReader().getColor(i,j);
+            }
+        }
+        for(int i = 0; i < pixels.length/2; i++) {
+            Color[] temp = pixels[i];
+            pixels[i] = pixels[pixels.length-i];
+            pixels[pixels.length-i] = temp;
+        }
+        for(int i = 0; i < pixels.length; i++) {
+            for(int j = 0; j < pixels[1].length; j++) {
+                int red = (int)(255-(pixels[i][j].getRed()*255));
+                int green = (int)(255-(pixels[i][j].getGreen()*255));
+                int blue = (int)(255-(pixels[i][j].getBlue()*255));
+                image.getPixelWriter().setColor(i,j,Color.rgb(red,green,blue));
+            }
+        }
+        return image;
     }
 
     /**
@@ -166,25 +183,6 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      */
     @Override
     public void start(Stage primaryStage) throws Exception {
-        stage = primaryStage;
-        root = new Group( );
-        scene = new Scene( root, width, height );
 
-        List<Button> buttons = new ArrayList<>();
-        buttons.add(new Button("Open"));
-        buttons.add(new Button("Save"));
-        buttons.add(new Button("Flip"));
-        buttons.add(new Button("Invert"));
-        buttons.add(new Button("Grayscale"));
-        buttons.add(new Button("Pixelate"));
-
-        for( int i = 0; i < buttons.size(); i++ )
-            buttons.get(i).relocate((width/12)+(width/7)*i, height-50);
-
-        root.getChildren().addAll(buttons);
-
-        stage.setTitle("Image Manipulator-inator");
-        stage.setScene(scene);
-        stage.show();
     }
 }
