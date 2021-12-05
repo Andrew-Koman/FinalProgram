@@ -9,13 +9,15 @@ import javafx.stage.Stage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ImageManipulator extends Application implements ImageManipulatorInterface{
     private Stage stage = null;
     private Scene scene = null;
     private Group root = null;
     private double width = 640,
-            height = 480;
+                   height = 480;
     /**
      * Load the specified PPM image file.
      * The image file must be in the PPM P3 format
