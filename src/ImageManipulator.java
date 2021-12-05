@@ -8,7 +8,9 @@ import javafx.stage.Stage;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ImageManipulator extends Application implements ImageManipulatorInterface{
     private Stage stage = null;
@@ -128,7 +130,7 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      */
     @Override
     public WritableImage pixelateImage(WritableImage image) {
-
+        return null;
     }
 
     /**
@@ -197,21 +199,26 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
         root = new Group( );
         scene = new Scene( root, width, height );
 
-        List<Button> buttons = new ArrayList<>();
-        buttons.add(new Button("Open"));
-        buttons.add(new Button("Save"));
-        buttons.add(new Button("Flip"));
-        buttons.add(new Button("Invert"));
-        buttons.add(new Button("Grayscale"));
-        buttons.add(new Button("Pixelate"));
+        Map<String, Button> buttons = new HashMap<>();
+        buttons.put("open", new Button("Open"));
+        buttons.put("save", new Button("Save"));
+        buttons.put("flip", new Button("Flip"));
+        buttons.put("invert", new Button("Invert"));
+        buttons.put("gray", new Button("Grayscale"));
+        buttons.put("pixel", new Button("Pixelate"));
 
-        for( int i = 0; i < buttons.size(); i++ )
-            buttons.get(i).relocate((width/12)+(width/7)*i, height-50);
+        int i = 0;
+        for( Map.Entry<String, Button> entry : buttons.entrySet() ) {
+            Button value = entry.getValue();
+            value.relocate((width / 12) + (width / 7) * i, height - 50);
+            i++;
+        }
 
-        root.getChildren().addAll(buttons);
+        root.getChildren().addAll(buttons.values());
 
         stage.setTitle("Image Manipulator-inator");
         stage.setScene(scene);
         stage.show();
+
     }
 }
