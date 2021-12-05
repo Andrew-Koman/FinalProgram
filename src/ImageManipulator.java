@@ -38,7 +38,7 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
         File imageFile = new File(filename);
         Integer width = null, height = null, colorSpace = null;
         try(Scanner imageScanner = new Scanner(imageFile)) {
-            if (imageScanner.next() != "P3") {
+            if (!imageScanner.next().equals("P3")) {
                 throw new IllegalArgumentException();
             }
             while(width == null || height == null || colorSpace == null) {
