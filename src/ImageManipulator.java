@@ -81,7 +81,17 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      */
     @Override
     public WritableImage grayifyImage(WritableImage image) {
-        return null;
+        Color[][] pixels = new Color[(int)image.getHeight()][(int)image.getWidth()];
+        for(int i = 0; i < pixels.length; i++) {
+            for(int j = 0; j < pixels[1].length; j++) {
+                pixels[i][j] = image.getPixelReader().getColor(i,j);
+                int red = (int)(255-(pixels[i][j].getRed()*0.2989));
+                int green = (int)(255-(pixels[i][j].getGreen()*0.5870));
+                int blue = (int)(255-(pixels[i][j].getBlue()*0.1140));
+                image.getPixelWriter().setColor(i,j,Color.rgb(red,green,blue));
+            }
+        }
+        return image;
     }
 
     /**
@@ -108,7 +118,7 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      */
     @Override
     public WritableImage pixelateImage(WritableImage image) {
-        return null;
+
     }
 
     /**
