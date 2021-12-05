@@ -1,21 +1,27 @@
 import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.image.WritableImage;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.TextAlignment;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.*;
 
 public class ImageManipulator extends Application implements ImageManipulatorInterface{
-    private Stage stage = null;
+    private Stage primaryStage = null;
     private Scene scene = null;
     private Group root = null;
     private double width = 640,
@@ -33,16 +39,44 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      */
     @Override
     public WritableImage loadImage(String filename) throws FileNotFoundException {
-        File image = new File(filename);
-        try(Scanner imageScanner = new Scanner(image)) {
+        File imageFile = new File(filename);
+        Integer width = null, height = null, colorSpace = null;
+        try(Scanner imageScanner = new Scanner(imageFile)) {
             if (imageScanner.next() != "P3") {
                 throw new IllegalArgumentException();
             }
-            while(imageScanner.hasNext()) {
-
+            while(width == null || height == null || colorSpace == null) {
+                String next = imageScanner.next();
+                Scanner nextScanner = new Scanner(next);
+                if(next.charAt(0) == '#') {
+                    imageScanner.nextLine();
+                    break;
+                }
+                if(width == null) {
+                    width = nextScanner.nextInt();
+                } else if (height == null) {
+                    height = nextScanner.nextInt();
+                } else {
+                    colorSpace = nextScanner.nextInt();
+                }
             }
+            WritableImage image = new WritableImage(width,height);
+            try {
+                for(int i = 0; i < height; i++) {
+                    for(int j = 0; j < width; j++) {
+                        int red = imageScanner.nextInt()/colorSpace;
+                        int green = imageScanner.nextInt()/colorSpace;
+                        int blue = imageScanner.nextInt()/colorSpace;
+                        image.getPixelWriter().setColor(j,i,Color.rgb(red,green,blue));
+                    }
+                }
+            } catch (InputMismatchException exception) {
+                imageScanner.nextLine();
+            } catch (NoSuchElementException exception) {
+            }
+            return image;
         } catch (FileNotFoundException error) {
-
+            throw error;
         }
     }
 
@@ -205,30 +239,75 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      */
     @Override
     public void start(Stage primaryStage) throws Exception {
-        stage = primaryStage;
+        this.primaryStage = primaryStage;
         root = new Group( );
         scene = new Scene( root, width, height );
 
-        Map<String, Button> buttons = new HashMap<>();
-        buttons.put("open", new Button("Open"));
-        buttons.put("save", new Button("Save"));
-        buttons.put("flip", new Button("Flip"));
-        buttons.put("invert", new Button("Invert"));
-        buttons.put("gray", new Button("Grayscale"));
-        buttons.put("pixel", new Button("Pixelate"));
+        List<String> buttonNames = Arrays.asList("Open", "Save", "Flip", "Invert", "Grayscale", "Pixelate");
 
-        int i = 0;
-        for( Map.Entry<String, Button> entry : buttons.entrySet() ) {
-            Button value = entry.getValue();
-            value.relocate((width / 12) + (width / 7) * i, height - 50);
-            i++;
+        Map<String, Button> buttons = new HashMap<>();
+        for( int i = 0; i < buttonNames.size(); i++ ) {
+            Button button = new Button( buttonNames.get(i) );
+            button.relocate((width / 12) + (width / 7) * i, height - 50);
+            buttons.put( buttonNames.get(i), button );
         }
+        FileChooser fileChooser = new FileChooser();
+        FileChooser.ExtensionFilter fileFilter = new FileChooser.ExtensionFilter("Portable Pixel Map", "*.ppm");
+        fileChooser.getExtensionFilters().add(fileFilter);
+
+        WritableImage image;
+        buttons.get("Open").setOnAction( (ActionEvent event ) -> {
+            File file = fileChooser.showOpenDialog(ImageManipulator.this.primaryStage);
+            if( file != null ) {
+                try {
+                    loadImage(file.getAbsolutePath());
+                } catch( FileNotFoundException e ){
+                    fileNotFoundPopup( file.getName() );
+                }
+            }
+        });
+
+        buttons.get("Save").setOnAction( event -> {
+            File file = fileChooser.showSaveDialog(this.primaryStage);
+            if (file != null )
+                try {
+                    saveImage(file.getAbsolutePath(), null);
+                } catch ( FileNotFoundException e ){
+                    fileNotFoundPopup( file.getName() );
+                }
+        });
 
         root.getChildren().addAll(buttons.values());
+        this.primaryStage.setTitle("Image Manipulator-inator");
+        this.primaryStage.setScene(scene);
+        this.primaryStage.show();
+    }
 
-        stage.setTitle("Image Manipulator-inator");
-        stage.setScene(scene);
-        stage.show();
+    private void fileNotFoundPopup(String fileName){
+        Stage dialog = new Stage();
+        dialog.setTitle("File Not Found");
+        dialog.initOwner(primaryStage);
+        dialog.setResizable(false);
+        VBox vBox = new VBox();
+        vBox.setAlignment(Pos.BASELINE_CENTER);
 
+        Label label = new Label("File Not Found.");
+        label.setTextAlignment(TextAlignment.CENTER);
+        label.setAlignment(Pos.CENTER);
+
+        Label fileLabel = new Label(fileName);
+        fileLabel.setTextAlignment(TextAlignment.CENTER);
+        fileLabel.setAlignment(Pos.CENTER);
+
+        Button okButton = new Button("OK");
+
+        okButton.setOnAction( event -> {
+            dialog.close();
+        });
+
+        vBox.getChildren().addAll(label, fileLabel, okButton);
+        Scene dialogScene = new Scene(vBox, 200, 100);
+        dialog.setScene(dialogScene);
+        dialog.show();
     }
 }
