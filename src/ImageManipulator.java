@@ -36,7 +36,9 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
             if (imageScanner.next() != "P3") {
                 throw new IllegalArgumentException();
             }
+            while(imageScanner.hasNext()) {
 
+            }
         } catch (FileNotFoundException error) {
 
         }
