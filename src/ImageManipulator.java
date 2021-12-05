@@ -1,4 +1,7 @@
 import javafx.application.Application;
+import javafx.scene.Group;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -8,6 +11,11 @@ import java.io.FileNotFoundException;
 import java.util.Scanner;
 
 public class ImageManipulator extends Application implements ImageManipulatorInterface{
+    private Stage stage = null;
+    private Scene scene = null;
+    private Group root = null;
+    private double width = 640,
+            height = 480;
     /**
      * Load the specified PPM image file.
      * The image file must be in the PPM P3 format
@@ -91,7 +99,17 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      */
     @Override
     public WritableImage grayifyImage(WritableImage image) {
-        return null;
+        Color[][] pixels = new Color[(int)image.getHeight()][(int)image.getWidth()];
+        for(int i = 0; i < pixels.length; i++) {
+            for(int j = 0; j < pixels[1].length; j++) {
+                pixels[i][j] = image.getPixelReader().getColor(i,j);
+                int red = (int)(255-(pixels[i][j].getRed()*0.2989));
+                int green = (int)(255-(pixels[i][j].getGreen()*0.5870));
+                int blue = (int)(255-(pixels[i][j].getBlue()*0.1140));
+                image.getPixelWriter().setColor(i,j,Color.rgb(red,green,blue));
+            }
+        }
+        return image;
     }
 
     /**
@@ -183,6 +201,25 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      */
     @Override
     public void start(Stage primaryStage) throws Exception {
+        stage = primaryStage;
+        root = new Group( );
+        scene = new Scene( root, width, height );
 
+        List<Button> buttons = new ArrayList<>();
+        buttons.add(new Button("Open"));
+        buttons.add(new Button("Save"));
+        buttons.add(new Button("Flip"));
+        buttons.add(new Button("Invert"));
+        buttons.add(new Button("Grayscale"));
+        buttons.add(new Button("Pixelate"));
+
+        for( int i = 0; i < buttons.size(); i++ )
+            buttons.get(i).relocate((width/12)+(width/7)*i, height-50);
+
+        root.getChildren().addAll(buttons);
+
+        stage.setTitle("Image Manipulator-inator");
+        stage.setScene(scene);
+        stage.show();
     }
 }
