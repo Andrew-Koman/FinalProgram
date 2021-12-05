@@ -134,7 +134,7 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      */
     @Override
     public WritableImage flipImage(WritableImage image) {
-        return null;
+        Color[][] ogImage = new Color[(int)image.getHeight()][(int)image.getWidth()];
     }
 
     /**
