@@ -134,7 +134,26 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      */
     @Override
     public WritableImage flipImage(WritableImage image) {
-        Color[][] ogImage = new Color[(int)image.getHeight()][(int)image.getWidth()];
+        Color[][] pixels = new Color[(int)image.getHeight()][(int)image.getWidth()];
+        for(int i = 0; i < pixels.length; i++) {
+            for(int j = 0; j < pixels[1].length; j++) {
+                pixels[i][j] = image.getPixelReader().getColor(i,j);
+            }
+        }
+        for(int i = 0; i < pixels.length/2; i++) {
+            Color[] temp = pixels[i];
+            pixels[i] = pixels[pixels.length-i];
+            pixels[pixels.length-i] = temp;
+        }
+        for(int i = 0; i < pixels.length; i++) {
+            for(int j = 0; j < pixels[1].length; j++) {
+                int red = (int)(255-(pixels[i][j].getRed()*255));
+                int green = (int)(255-(pixels[i][j].getGreen()*255));
+                int blue = (int)(255-(pixels[i][j].getBlue()*255));
+                image.getPixelWriter().setColor(i,j,Color.rgb(red,green,blue));
+            }
+        }
+        return image;
     }
 
     /**
