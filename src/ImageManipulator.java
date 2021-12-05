@@ -1,23 +1,11 @@
 import javafx.application.Application;
-import javafx.scene.Group;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class ImageManipulator extends Application implements ImageManipulatorInterface{
-    private Stage stage = null;
-    private Scene scene = null;
-    private Group root = null;
-    private double width = 1280,
-                   height = 720;
     /**
      * Load the specified PPM image file.
      * The image file must be in the PPM P3 format
@@ -146,7 +134,7 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      */
     @Override
     public WritableImage flipImage(WritableImage image) {
-        return null;
+        Color[][] ogImage = new Color[(int)image.getHeight()][(int)image.getWidth()];
     }
 
     /**
@@ -162,38 +150,10 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      *                     the application scene can be set.
      *                     Applications may create other stages, if needed, but they will not be
      *                     primary stages.
+     * @throws Exception if something goes wrong
      */
     @Override
-    public void start(Stage primaryStage) {
-        root = new Group( );
-        stage = primaryStage;
-        scene = new Scene( root, width, height );
+    public void start(Stage primaryStage) throws Exception {
 
-        List<Button> buttons = new ArrayList<>();
-        buttons.add(new Button("Open"));
-        buttons.add(new Button("Save"));
-        buttons.add(new Button("Flip"));
-        buttons.add(new Button("Invert"));
-        buttons.add(new Button("Greyscale"));
-        buttons.add(new Button("Pixelate"));
-
-
-        FileChooser.ExtensionFilter fileFilter = new FileChooser.ExtensionFilter("Portable Pixel Map", "*.ppm");
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("Open an image");
-        chooser.getExtensionFilters().add(fileFilter);
-
-        for( int i = 0; i < buttons.size(); i++)
-            buttons.get(i).relocate(250+150*i, 650);
-
-        buttons.get(0).setOnAction( event -> {
-            chooser.showOpenDialog(stage);
-        });
-
-        root.getChildren().addAll(buttons);
-        stage.setTitle("Image Manipulator-inator");
-        stage.setScene(scene);
-        stage.setResizable(false);
-        stage.show();
     }
 }
