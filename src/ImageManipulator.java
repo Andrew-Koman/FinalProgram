@@ -1,4 +1,7 @@
 import javafx.application.Application;
+import javafx.beans.binding.Bindings;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -243,6 +246,9 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
         HBox buttonBox = new HBox();
         scene = new Scene( root, width, height );
 
+        primaryStage.setMinHeight(height);
+        primaryStage.setMinWidth(width);
+
         //Create Buttons
         List<String> buttonNames = Arrays.asList("Open", "Save", "Flip", "Invert", "Grayscale", "Pixelate");
         Map<String, Button> buttons = new HashMap<>();
@@ -258,7 +264,10 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
         //Create Image Label
         Label imageLabel = new Label();
         ImageView view = new ImageView();
-        double[] imageSize = new double[2]; //{width, height}
+
+        view.setPreserveRatio(true);
+        view.setFitHeight(height-100);
+
 
         imageLabel.setGraphic( view );
         root.setCenter( imageLabel );
@@ -272,8 +281,11 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
             if( file != null ) {
                 try {
                     view.setImage( loadImage(file.getAbsolutePath()) );
-                    imageSize[0] = view.getImage().getWidth();
-                    imageSize[1] = view.getImage().getHeight();
+                    width = view.getImage().getWidth();
+                    height = view.getImage().getHeight();
+
+                    primaryStage.setMinHeight(height);
+                    primaryStage.setMinWidth(width);
 
                 } catch( FileNotFoundException e ){
                     fileNotFoundPopup( file.getName() );
@@ -289,6 +301,12 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
                 } catch ( FileNotFoundException e ){
                     fileNotFoundPopup( file.getName() );
                 }
+        });
+
+
+        primaryStage.heightProperty().addListener((observable, oldHeight, newHeight) -> {
+            height = newHeight.doubleValue();
+            view.setFitHeight(height-100);
         });
 
         root.setBottom(buttonBox);
