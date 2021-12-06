@@ -8,9 +8,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.image.WritableImage;
+import javafx.scene.image.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -21,6 +19,7 @@ import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.*;
 
 public class ImageManipulator extends Application implements ImageManipulatorInterface{
@@ -95,7 +94,28 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      */
     @Override
     public void saveImage(String filename, WritableImage image) throws FileNotFoundException {
+        File outFile = new File(filename);
+        int width = (int)image.getWidth(), height = (int)image.getHeight(), colorSpace = 255;
+        PrintWriter fileWriter = new PrintWriter( outFile );
+        fileWriter.println("P3");
+        fileWriter.println("# CREATOR: CS1122 ImageManipulator-inator");
 
+        fileWriter.printf("%d %d%n", width, height);
+        fileWriter.println(colorSpace);
+
+        PixelReader pixelReader = image.getPixelReader();
+
+        for(int i = 0; i < height; i++) {
+            for(int j = 0; j < width; j++) {
+                Color pixelColor = pixelReader.getColor(j, i);
+                int r = (int)Math.round(pixelColor.getRed() * 255.0);
+                int g = (int)Math.round(pixelColor.getGreen() * 255.0);
+                int b = (int)Math.round(pixelColor.getBlue() * 255.0);
+
+                fileWriter.printf("%d %d %d%n", r, g, b );
+            }
+        }
+        fileWriter.close();
     }
 
     /**
@@ -246,8 +266,8 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
         HBox buttonBox = new HBox();
         scene = new Scene( root, width, height );
 
-        primaryStage.setMinHeight(height);
-        primaryStage.setMinWidth(width);
+        primaryStage.setMinWidth(640);
+        primaryStage.setMinHeight(480);
 
         //Create Buttons
         List<String> buttonNames = Arrays.asList("Open", "Save", "Flip", "Invert", "Grayscale", "Pixelate");
@@ -276,6 +296,7 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
         FileChooser.ExtensionFilter fileFilter = new FileChooser.ExtensionFilter("Portable Pixel Map", "*.ppm");
         fileChooser.getExtensionFilters().add(fileFilter);
 
+        //On open, open open-dialog
         buttons.get("Open").setOnAction( (ActionEvent event ) -> {
             File file = fileChooser.showOpenDialog(ImageManipulator.this.primaryStage);
             if( file != null ) {
@@ -284,29 +305,32 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
                     width = view.getImage().getWidth();
                     height = view.getImage().getHeight();
 
-                    primaryStage.setMinHeight(height);
-                    primaryStage.setMinWidth(width);
-
                 } catch( FileNotFoundException e ){
                     fileNotFoundPopup( file.getName() );
                 }
             }
         });
 
+        //On save, open save-dialog
         buttons.get("Save").setOnAction( event -> {
             File file = fileChooser.showSaveDialog(this.primaryStage);
             if (file != null )
                 try {
-                    saveImage(file.getAbsolutePath(), null);
+                    saveImage(file.getAbsolutePath(), (WritableImage) view.getImage());
                 } catch ( FileNotFoundException e ){
                     fileNotFoundPopup( file.getName() );
                 }
         });
 
-
+        //On window height resize, scale image to new height
         primaryStage.heightProperty().addListener((observable, oldHeight, newHeight) -> {
             height = newHeight.doubleValue();
             view.setFitHeight(height-100);
+        });
+
+        primaryStage.widthProperty().addListener((observable, oldWidth, newWidth) -> {
+            width = newWidth.doubleValue();
+            view.setFitWidth(width-100);
         });
 
         root.setBottom(buttonBox);
