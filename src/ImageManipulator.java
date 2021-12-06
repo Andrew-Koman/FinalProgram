@@ -1,7 +1,4 @@
 import javafx.application.Application;
-import javafx.beans.binding.Bindings;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -24,17 +21,15 @@ import java.util.*;
 
 public class ImageManipulator extends Application implements ImageManipulatorInterface{
     private Stage primaryStage = null;
-    private Scene scene = null;
-    private BorderPane root = null;
     private double width = 640,
                    height = 480;
     /**
      * Load the specified PPM image file.
      * The image file must be in the PPM P3 format
      *
-     * @param filename
-     * @return WritableImage
-     * @throws FileNotFoundException
+     * @param filename File name to be loaded
+     * @return loaded WritableImage from filename
+     * @throws FileNotFoundException If filename is not found, throw exception
      * @link http://netpbm.sourceforge.net/doc/ppm.html
      * <p>
      * Don't forget to add a load button to the application!
@@ -75,8 +70,6 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
             }
         } catch (InputMismatchException exception) {
             imageScanner.nextLine();
-        } catch (NoSuchElementException exception) {
-            System.err.println(exception);
         }
         return image;
     }
@@ -85,9 +78,9 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      * Save the specified image to a PPM file.
      * The image file must be in the PPM P3 format
      *
-     * @param filename
-     * @param image
-     * @throws FileNotFoundException
+     * @param filename Name of image file to be saved
+     * @param image WritableImage to be saved
+     * @throws FileNotFoundException If filename is not found, then throw exception
      * @link http://netpbm.sourceforge.net/doc/ppm.html
      * <p>
      * Don't forget to add a save button to the application!
@@ -257,14 +250,13 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      *                     the application scene can be set.
      *                     Applications may create other stages, if needed, but they will not be
      *                     primary stages.
-     * @throws Exception if something goes wrong
      */
     @Override
-    public void start(Stage primaryStage) throws Exception {
+    public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
-        root = new BorderPane( );
+        BorderPane root = new BorderPane();
         HBox buttonBox = new HBox();
-        scene = new Scene( root, width, height );
+        Scene scene = new Scene(root, width, height);
 
         primaryStage.setMinWidth(640);
         primaryStage.setMinHeight(480);
@@ -322,6 +314,18 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
                 }
         });
 
+        //On flip, call flipImage
+        buttons.get("Flip").setOnAction( event -> view.setImage( flipImage( (WritableImage) view.getImage() ) ));
+
+        //On Invert, call invertImage
+        buttons.get("Invert").setOnAction( event -> view.setImage( invertImage( (WritableImage) view.getImage() ) ));
+
+        //On Grayscale, call grayifyImage
+        buttons.get("Grayscale").setOnAction( event -> view.setImage( grayifyImage( (WritableImage) view.getImage() ) ));
+
+        //On Pixelate, call pixelateImage
+        buttons.get("Pixelate").setOnAction( event -> view.setImage( pixelateImage( (WritableImage) view.getImage() ) ));
+
         //On window height resize, scale image to new height
         primaryStage.heightProperty().addListener((observable, oldHeight, newHeight) -> {
             height = newHeight.doubleValue();
@@ -357,9 +361,7 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
         fileLabel.setAlignment(Pos.CENTER);
 
         Button okButton = new Button("OK");
-        okButton.setOnAction( event -> {
-            dialog.close();
-        });
+        okButton.setOnAction( event -> dialog.close());
 
         vBox.getChildren().addAll(label, fileLabel, okButton);
         Scene dialogScene = new Scene(vBox, 200, 100);
