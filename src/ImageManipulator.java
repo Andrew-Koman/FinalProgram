@@ -1,11 +1,15 @@
 import javafx.application.Application;
 import javafx.event.ActionEvent;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
@@ -19,7 +23,7 @@ import java.util.*;
 public class ImageManipulator extends Application implements ImageManipulatorInterface{
     private Stage primaryStage = null;
     private Scene scene = null;
-    private Group root = null;
+    private BorderPane root = null;
     private double width = 640,
                    height = 480;
     /**
@@ -36,44 +40,43 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
     @Override
     public WritableImage loadImage(String filename) throws FileNotFoundException {
         File imageFile = new File(filename);
-        Integer width = null, height = null, colorSpace = null;
-        try(Scanner imageScanner = new Scanner(imageFile)) {
-            if (!imageScanner.next().equals("P3")) {
-                throw new IllegalArgumentException();
-            }
-            while(width == null || height == null || colorSpace == null) {
-                String next = imageScanner.next();
-                Scanner nextScanner = new Scanner(next);
-                if(next.charAt(0) == '#') {
-                    imageScanner.nextLine();
-                    break;
-                }
-                if(width == null) {
-                    width = nextScanner.nextInt();
-                } else if (height == null) {
-                    height = nextScanner.nextInt();
-                } else {
-                    colorSpace = nextScanner.nextInt();
-                }
-            }
-            WritableImage image = new WritableImage(width,height);
-            try {
-                for(int i = 0; i < height; i++) {
-                    for(int j = 0; j < width; j++) {
-                        int red = imageScanner.nextInt()/colorSpace;
-                        int green = imageScanner.nextInt()/colorSpace;
-                        int blue = imageScanner.nextInt()/colorSpace;
-                        image.getPixelWriter().setColor(j,i,Color.rgb(red,green,blue));
-                    }
-                }
-            } catch (InputMismatchException exception) {
-                imageScanner.nextLine();
-            } catch (NoSuchElementException exception) {
-            }
-            return image;
-        } catch (FileNotFoundException error) {
-            throw error;
+        int width = -1, height = -1, colorSpace = -1;
+
+        Scanner imageScanner = new Scanner(imageFile);
+        if (!imageScanner.nextLine().equals("P3")) {
+            //Probably should not throw an argument, because it is not defined in the throws given by the interface **********************************************
+            throw new IllegalArgumentException();
         }
+        while(width == -1 || height == -1 || colorSpace == -1) {
+            String next = imageScanner.nextLine();
+            if(next.charAt(0) == '#')
+                continue;
+
+            Scanner lineScanner = new Scanner(next);
+            if(width == -1 && height == -1) {
+                width = lineScanner.nextInt();
+                height = lineScanner.nextInt();
+            } else {
+                colorSpace = lineScanner.nextInt();
+            }
+        }
+//        System.out.printf("Width: %d\tHeight: %d\tColor Space: %d%n", width, height, colorSpace);
+        WritableImage image = new WritableImage(width,height);
+        try {
+            for(int i = 0; i < height; i++) {
+                for(int j = 0; j < width; j++) {
+                    int red = imageScanner.nextInt()*(colorSpace/255);
+                    int green = imageScanner.nextInt()*(colorSpace/255);
+                    int blue = imageScanner.nextInt()*(colorSpace/255);
+                    image.getPixelWriter().setColor(j,i,Color.rgb(red,green,blue));
+                }
+            }
+        } catch (InputMismatchException exception) {
+            imageScanner.nextLine();
+        } catch (NoSuchElementException exception) {
+            System.err.println(exception);
+        }
+        return image;
     }
 
     /**
@@ -236,27 +239,39 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
     @Override
     public void start(Stage primaryStage) throws Exception {
         this.primaryStage = primaryStage;
-        root = new Group( );
+        root = new BorderPane( );
+        HBox buttonBox = new HBox();
         scene = new Scene( root, width, height );
 
+        //Create Buttons
         List<String> buttonNames = Arrays.asList("Open", "Save", "Flip", "Invert", "Grayscale", "Pixelate");
-
         Map<String, Button> buttons = new HashMap<>();
-        for( int i = 0; i < buttonNames.size(); i++ ) {
-            Button button = new Button( buttonNames.get(i) );
-            button.relocate((width / 12) + (width / 7) * i, height - 50);
-            buttons.put( buttonNames.get(i), button );
+        for (String buttonName : buttonNames) {
+            Button button = new Button(buttonName);
+            buttons.put(buttonName, button);
+            buttonBox.getChildren().add( button );
         }
+        buttonBox.setAlignment(Pos.BASELINE_CENTER);
+        buttonBox.setSpacing(20);
+        buttonBox.setPadding( new Insets(10) );
+
+        //Create Image Label
+        Label imageLabel = new Label();
+        ImageView view = new ImageView();
+
+        imageLabel.setGraphic( view );
+        root.setCenter( imageLabel );
+
         FileChooser fileChooser = new FileChooser();
         FileChooser.ExtensionFilter fileFilter = new FileChooser.ExtensionFilter("Portable Pixel Map", "*.ppm");
         fileChooser.getExtensionFilters().add(fileFilter);
 
-        WritableImage image;
         buttons.get("Open").setOnAction( (ActionEvent event ) -> {
             File file = fileChooser.showOpenDialog(ImageManipulator.this.primaryStage);
             if( file != null ) {
                 try {
-                    loadImage(file.getAbsolutePath());
+                    view.setImage( loadImage(file.getAbsolutePath()) );
+
                 } catch( FileNotFoundException e ){
                     fileNotFoundPopup( file.getName() );
                 }
@@ -273,7 +288,7 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
                 }
         });
 
-        root.getChildren().addAll(buttons.values());
+        root.setBottom(buttonBox);
         this.primaryStage.setTitle("Image Manipulator-inator");
         this.primaryStage.setScene(scene);
         this.primaryStage.show();
