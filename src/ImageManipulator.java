@@ -298,7 +298,7 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
                     height = view.getImage().getHeight();
 
                 } catch( FileNotFoundException e ){
-                    fileNotFoundPopup( file.getName() );
+                    infoPopup( new String[] {"File not found.", file.getName() } );
                 }
             }
         });
@@ -309,8 +309,9 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
             if (file != null )
                 try {
                     saveImage(file.getAbsolutePath(), (WritableImage) view.getImage());
+                    infoPopup( new String[] {"File saved.", file.getName() } );
                 } catch ( FileNotFoundException e ){
-                    fileNotFoundPopup( file.getName() );
+                    infoPopup( new String[] {"File not found.", file.getName() } );
                 }
         });
 
@@ -343,7 +344,7 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
         this.primaryStage.show();
     }
 
-    private void fileNotFoundPopup(String fileName){
+    private void infoPopup( String[] messages ){
         Stage dialog = new Stage();
         dialog.setTitle("File Not Found");
         dialog.initOwner(primaryStage);
@@ -352,18 +353,17 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
         VBox vBox = new VBox();
         vBox.setAlignment(Pos.BASELINE_CENTER);
 
-        Label label = new Label("File Not Found.");
-        label.setTextAlignment(TextAlignment.CENTER);
-        label.setAlignment(Pos.CENTER);
-
-        Label fileLabel = new Label(fileName);
-        fileLabel.setTextAlignment(TextAlignment.CENTER);
-        fileLabel.setAlignment(Pos.CENTER);
+        for( String message : messages ){
+            Label label = new Label(message);
+            label.setTextAlignment( TextAlignment.CENTER );
+            label.setAlignment( Pos.BASELINE_CENTER );
+            vBox.getChildren().add(label);
+        }
 
         Button okButton = new Button("OK");
         okButton.setOnAction( event -> dialog.close());
+        vBox.getChildren().add(okButton);
 
-        vBox.getChildren().addAll(label, fileLabel, okButton);
         Scene dialogScene = new Scene(vBox, 200, 100);
         dialog.setScene(dialogScene);
         dialog.show();
