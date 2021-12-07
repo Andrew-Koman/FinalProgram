@@ -279,6 +279,7 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
         ImageView view = new ImageView();
 
         view.setPreserveRatio(true);
+        view.setSmooth(true);
         view.setFitHeight(height-100);
 
 
@@ -288,6 +289,8 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
         FileChooser fileChooser = new FileChooser();
         FileChooser.ExtensionFilter fileFilter = new FileChooser.ExtensionFilter("Portable Pixel Map", "*.ppm");
         fileChooser.getExtensionFilters().add(fileFilter);
+
+        //Event handlers for buttons
 
         //On open, open open-dialog
         buttons.get("Open").setOnAction( (ActionEvent event ) -> {
