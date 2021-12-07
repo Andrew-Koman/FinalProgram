@@ -279,6 +279,7 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
         ImageView view = new ImageView();
 
         view.setPreserveRatio(true);
+        view.setSmooth(true);
         view.setFitHeight(height-100);
 
 
