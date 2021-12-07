@@ -24,6 +24,7 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
     private Stage primaryStage = null;
     private double width = 640,
                    height = 480;
+    private int colorSpace = -1;
     /**
      * Load the specified PPM image file.
      * The image file must be in the PPM P3 format
@@ -38,7 +39,7 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
     @Override
     public WritableImage loadImage(String filename) throws FileNotFoundException {
         File imageFile = new File(filename);
-        int width = -1, height = -1, colorSpace = -1;
+        int width = -1, height = -1;
 
         Scanner imageScanner = new Scanner(imageFile);
         if (!imageScanner.nextLine().equals("P3")) {
@@ -63,9 +64,9 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
         try {
             for(int i = 0; i < height; i++) {
                 for(int j = 0; j < width; j++) {
-                    int red = imageScanner.nextInt()*(colorSpace/255);
-                    int green = imageScanner.nextInt()*(colorSpace/255);
-                    int blue = imageScanner.nextInt()*(colorSpace/255);
+                    int red = imageScanner.nextInt()*(255/colorSpace);
+                    int green = imageScanner.nextInt()*(255/colorSpace);
+                    int blue = imageScanner.nextInt()*(255/colorSpace);
                     image.getPixelWriter().setColor(j,i,Color.rgb(red,green,blue));
                 }
             }
@@ -89,7 +90,7 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
     @Override
     public void saveImage(String filename, WritableImage image) throws FileNotFoundException {
         File outFile = new File(filename);
-        int width = (int)image.getWidth(), height = (int)image.getHeight(), colorSpace = 255;
+        int width = (int)image.getWidth(), height = (int)image.getHeight();
         PrintWriter fileWriter = new PrintWriter( outFile );
         fileWriter.println("P3");
         fileWriter.println("# CREATOR: CS1122 ImageManipulator-inator");
@@ -102,9 +103,9 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
         for(int i = 0; i < height; i++) {
             for(int j = 0; j < width; j++) {
                 Color pixelColor = pixelReader.getColor(j, i);
-                int r = (int)Math.round(pixelColor.getRed() * 255.0);
-                int g = (int)Math.round(pixelColor.getGreen() * 255.0);
-                int b = (int)Math.round(pixelColor.getBlue() * 255.0);
+                int r = (int)(pixelColor.getRed()*colorSpace);
+                int g = (int)(pixelColor.getGreen()*colorSpace);
+                int b = (int)(pixelColor.getBlue()*colorSpace);
 
                 fileWriter.printf("%d %d %d%n", r, g, b );
             }
@@ -279,6 +280,7 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
         ImageView view = new ImageView();
 
         view.setPreserveRatio(true);
+        view.setSmooth(true);
         view.setFitHeight(height-100);
 
 
@@ -347,7 +349,7 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
 
     private void infoPopup( String[] messages ){
         Stage dialog = new Stage();
-        dialog.setTitle("File Not Found");
+        dialog.setTitle(messages[0]);
         dialog.initOwner(primaryStage);
         dialog.setResizable(false);
 
