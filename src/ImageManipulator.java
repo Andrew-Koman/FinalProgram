@@ -125,17 +125,20 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      */
     @Override
     public WritableImage invertImage(WritableImage image) {
-        Color[][] pixels = new Color[(int)image.getHeight()][(int)image.getWidth()];
-        for(int i = 0; i < pixels.length; i++) {
-            for(int j = 0; j < pixels[1].length; j++) {
-                pixels[i][j] = image.getPixelReader().getColor(i,j);
-                int red = (int)(255-(pixels[i][j].getRed()*255));
-                int green = (int)(255-(pixels[i][j].getGreen()*255));
-                int blue = (int)(255-(pixels[i][j].getBlue()*255));
-                image.getPixelWriter().setColor(i,j,Color.rgb(red,green,blue));
+        PixelReader pixelReader = image.getPixelReader();
+        WritableImage newImage = new WritableImage( (int)image.getWidth(), (int)image.getHeight() );
+        PixelWriter pixelWriter = newImage.getPixelWriter();
+
+        for(int y = 0; y < image.getHeight(); y++) {
+            for(int x = 0; x < image.getWidth(); x++) {
+                Color pixelColor = pixelReader.getColor(x, y);
+                int red = (int)(255-(pixelColor.getRed()*255));
+                int green = (int)(255-(pixelColor.getGreen()*255));
+                int blue = (int)(255-(pixelColor.getBlue()*255));
+                pixelWriter.setColor( x, y, Color.rgb( red, green, blue ) );
             }
         }
-        return image;
+        return newImage;
     }
 
     /**
@@ -154,15 +157,20 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      */
     @Override
     public WritableImage grayifyImage(WritableImage image) {
-        Color[][] pixels = new Color[(int)image.getHeight()][(int)image.getWidth()];
-        for(int i = 0; i < pixels.length; i++) {
-            for(int j = 0; j < pixels[1].length; j++) {
-                pixels[i][j] = image.getPixelReader().getColor(i,j);
-                double intensity = pixels[i][j].getRed()*.2989 + pixels[i][j].getBlue()*.1140 + pixels[i][j].getGreen()*.5870;
-                image.getPixelWriter().setColor(i,j,Color.color(intensity,intensity,intensity));
+        PixelReader pixelReader = image.getPixelReader();
+        WritableImage newImage = new WritableImage( (int)image.getWidth(), (int)image.getHeight() );
+        PixelWriter pixelWriter = newImage.getPixelWriter();
+
+        for(int y = 0; y < image.getHeight(); y++) {
+            for(int x = 0; x < image.getWidth(); x++) {
+                Color pixelColor = pixelReader.getColor(x, y);
+                int pixelIntensity = (int)(255*(pixelColor.getRed() * 0.2989
+                                        + pixelColor.getGreen() * 0.5870
+                                        + pixelColor.getBlue() * 0.1140));
+                pixelWriter.setColor( x, y, Color.rgb(pixelIntensity, pixelIntensity, pixelIntensity) );
             }
         }
-        return image;
+        return newImage;
     }
 
     /**
@@ -170,11 +178,11 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      * all pixels in the region the same color as the central pixel.
      * <p>
      * For example:
-     * [0,0,0] [0,0,0] [0,0,0] [0,0,0] [0,0,0]
-     * [0,0,0] [5,5,5] [5,5,5] [5,5,5] [0,0,0]
-     * [0,0,0] [5,5,5] [1,2,3] [5,5,5] [0,0,0]
-     * [0,0,0] [5,5,5] [5,5,5] [5,5,5] [0,0,0]
-     * [0,0,0] [0,0,0] [0,0,0] [0,0,0] [0,0,0]
+     * [0,0,0] [0,0,0] [0,0,0] [0,0,0] [0,0,0]     * [0,0,0] [0,0,0] [0,0,0] [0,0,0] [0,0,0]
+     * [0,0,0] [5,5,5] [5,5,5] [5,5,5] [0,0,0]     * [0,0,0] [5,5,5] [5,5,5] [5,5,5] [0,0,0]
+     * [0,0,0] [5,5,5] [1,2,3] [5,5,5] [0,0,0]     * [0,0,0] [5,5,5] [1,2,3] [5,5,5] [0,0,0]
+     * [0,0,0] [5,5,5] [5,5,5] [5,5,5] [0,0,0]     * [0,0,0] [5,5,5] [5,5,5] [5,5,5] [0,0,0]
+     * [0,0,0] [0,0,0] [0,0,0] [0,0,0] [0,0,0]     * [0,0,0] [0,0,0] [0,0,0] [0,0,0] [0,0,0]
      * <p>
      * is pixelated to
      * <p>
@@ -189,7 +197,23 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      */
     @Override
     public WritableImage pixelateImage(WritableImage image) {
-        return null;
+        PixelReader pixelReader = image.getPixelReader();
+        WritableImage newImage = new WritableImage( (int)image.getWidth(), (int)image.getHeight() );
+        PixelWriter pixelWriter = newImage.getPixelWriter();
+
+        for (int y = 2; y <= image.getHeight() - 2; y += 5) {
+            for (int x = 2; x <= image.getWidth() - 2; x += 5) {
+                Color pixelColor = pixelReader.getColor(x, y);
+                for (int y2 = y - 2; y2 < y + 3; y2++) {
+                    for (int x2 = x - 2; x2 < x + 3; x2++) {
+                        try {   //Try and write pixels, even if they are out of the dimensions of the image
+                            pixelWriter.setColor(x2, y2, pixelColor);
+                        } catch (IndexOutOfBoundsException ignored){ }
+                    }
+                }
+            }
+        }
+        return newImage;
     }
 
     /**
@@ -215,23 +239,16 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
      */
     @Override
     public WritableImage flipImage(WritableImage image) {
-        Color[][] pixels = new Color[(int)image.getHeight()][(int)image.getWidth()];
-        for(int i = 0; i < pixels.length; i++) {
-            for(int j = 0; j < pixels[1].length; j++) {
-                pixels[i][j] = image.getPixelReader().getColor(j,i);
+        PixelReader pixelReader = image.getPixelReader();
+        WritableImage newImage = new WritableImage( (int)image.getWidth(), (int)image.getHeight() );
+        PixelWriter pixelWriter = newImage.getPixelWriter();
+
+        for( int y = 0; y < image.getHeight(); y++ ){
+            for( int x = 0; x < image.getWidth(); x++ ){
+                pixelWriter.setColor( x, y, pixelReader.getColor( x, (int)(image.getHeight() - 1 - y) ) );
             }
         }
-        for(int i = 0; i < pixels.length/2-1; i++) {
-            Color[] temp = pixels[i];
-            pixels[i] = pixels[pixels.length-1-i];
-            pixels[pixels.length-1-i] = temp;
-        }
-        for(int i = 0; i < pixels.length; i++) {
-            for(int j = 0; j < pixels[1].length; j++) {
-                image.getPixelWriter().setColor(j,i,Color.color(pixels[i][j].getRed(),pixels[i][j].getGreen(),pixels[i][j].getBlue()));
-            }
-        }
-        return image;
+        return newImage;
     }
 
     /**
@@ -282,6 +299,13 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
         imageLabel.setGraphic( view );
         root.setCenter( imageLabel );
 
+        //Disable iamge modifier buttons because no image is loaded
+        buttons.get("Save").setDisable(true);
+        buttons.get("Flip").setDisable(true);
+        buttons.get("Invert").setDisable(true);
+        buttons.get("Grayscale").setDisable(true);
+        buttons.get("Pixelate").setDisable(true);
+
         FileChooser fileChooser = new FileChooser();
         FileChooser.ExtensionFilter fileFilter = new FileChooser.ExtensionFilter("Portable Pixel Map", "*.ppm");
         fileChooser.getExtensionFilters().add(fileFilter);
@@ -294,11 +318,18 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
             if( file != null ) {
                 try {
                     view.setImage( loadImage(file.getAbsolutePath()) );
-                    width = view.getImage().getWidth();
-                    height = view.getImage().getHeight();
-
                 } catch( FileNotFoundException e ){
                     infoPopup( new String[] {"File not found.", file.getName() } );
+                } finally {
+                    //Set width and height
+                    width = view.getImage().getWidth();
+                    height = view.getImage().getHeight();
+                    //Re-enable Image Modifiers once image is loaded
+                    buttons.get("Save").setDisable(false);
+                    buttons.get("Flip").setDisable(false);
+                    buttons.get("Invert").setDisable(false);
+                    buttons.get("Grayscale").setDisable(false);
+                    buttons.get("Pixelate").setDisable(false);
                 }
             }
         });
