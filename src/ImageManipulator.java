@@ -132,9 +132,9 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
         for(int y = 0; y < image.getHeight(); y++) {
             for(int x = 0; x < image.getWidth(); x++) {
                 Color pixelColor = pixelReader.getColor(x, y);
-                int red = (int)(255-(pixelColor.getRed()*255));
-                int green = (int)(255-(pixelColor.getGreen()*255));
-                int blue = (int)(255-(pixelColor.getBlue()*255));
+                int red = 255-(int)(pixelColor.getRed()*255);
+                int green = 255-(int)(pixelColor.getGreen()*255);
+                int blue = 255-(int)(pixelColor.getBlue()*255);
                 pixelWriter.setColor( x, y, Color.rgb( red, green, blue ) );
             }
         }
