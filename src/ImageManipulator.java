@@ -23,7 +23,6 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
     private Stage primaryStage = null;
     private double width = 640,
                    height = 480;
-    private int colorSpace = -1;
     /**
      * Load the specified PPM image file.
      * The image file must be in the PPM P3 format
@@ -38,7 +37,7 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
     @Override
     public WritableImage loadImage(String filename) throws FileNotFoundException {
         File imageFile = new File(filename);
-        int width = -1, height = -1;
+        int width = -1, height = -1, colorSpace = -1;
 
         Scanner imageScanner = new Scanner(imageFile);
         if (!imageScanner.nextLine().equals("P3")) {
@@ -89,7 +88,7 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
     @Override
     public void saveImage(String filename, WritableImage image) throws FileNotFoundException {
         File outFile = new File(filename);
-        int width = (int)image.getWidth(), height = (int)image.getHeight();
+        int width = (int)image.getWidth(), height = (int)image.getHeight(), colorSpace = 255;
         PrintWriter fileWriter = new PrintWriter( outFile );
         fileWriter.println("P3");
         fileWriter.println("# CREATOR: CS1122 ImageManipulator-inator");
