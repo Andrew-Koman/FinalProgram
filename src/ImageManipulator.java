@@ -218,20 +218,17 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
         Color[][] pixels = new Color[(int)image.getHeight()][(int)image.getWidth()];
         for(int i = 0; i < pixels.length; i++) {
             for(int j = 0; j < pixels[1].length; j++) {
-                pixels[i][j] = image.getPixelReader().getColor(i,j);
+                pixels[i][j] = image.getPixelReader().getColor(j,i);
             }
         }
-        for(int i = 0; i < pixels.length/2; i++) {
+        for(int i = 0; i < pixels.length/2-1; i++) {
             Color[] temp = pixels[i];
-            pixels[i] = pixels[pixels.length-i];
-            pixels[pixels.length-i] = temp;
+            pixels[i] = pixels[pixels.length-1-i];
+            pixels[pixels.length-1-i] = temp;
         }
         for(int i = 0; i < pixels.length; i++) {
             for(int j = 0; j < pixels[1].length; j++) {
-                int red = (int)(255-(pixels[i][j].getRed()*255));
-                int green = (int)(255-(pixels[i][j].getGreen()*255));
-                int blue = (int)(255-(pixels[i][j].getBlue()*255));
-                image.getPixelWriter().setColor(i,j,Color.rgb(red,green,blue));
+                image.getPixelWriter().setColor(j,i,Color.color(pixels[i][j].getRed(),pixels[i][j].getGreen(),pixels[i][j].getBlue()));
             }
         }
         return image;
