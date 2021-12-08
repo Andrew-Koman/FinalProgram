@@ -4,21 +4,47 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.util.Scanner;
+import java.util.InputMismatchException;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Arrays;
+import java.util.List;
+
+import java.awt.Desktop;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.*;
 
+/**
+ * @author Andrew Koman
+ * @author Ben Boelens
+ * @author Ethan Schultz
+ *
+ * ASSIGNMNET: Final Project - Image Manipulator-inator
+ * COURSE: CS 1122
+ * LAB SECTION: L03
+ *
+ * DESCRIPTION:
+ * A GUI that manipulates image files in the Portable Pixel Map (PPM) format
+ * Modifications are: Flip Image, Invert Colors, Grayscale, and Pixelate
+ *
+ */
 public class ImageManipulator extends Application implements ImageManipulatorInterface{
     private Stage primaryStage = null;
     private double width = 640,
@@ -41,8 +67,9 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
 
         Scanner imageScanner = new Scanner(imageFile);
         if (!imageScanner.nextLine().equals("P3")) {
-            //Probably should not throw an argument, because it is not defined in the throws given by the interface **********************************************
-            throw new IllegalArgumentException();
+            infoPopup(new String[] {"File Error", "File is corrupt", "or not a PPM"});
+            imageScanner.close();
+            return null;
         }
         while(width == -1 || height == -1 || colorSpace == -1) {
             String next = imageScanner.nextLine();
@@ -71,6 +98,7 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
         } catch (InputMismatchException exception) {
             imageScanner.nextLine();
         }
+        imageScanner.close();
         return image;
     }
 
@@ -321,15 +349,17 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
                 } catch( FileNotFoundException e ){
                     infoPopup( new String[] {"File not found.", file.getName() } );
                 } finally {
-                    //Set width and height
-                    width = view.getImage().getWidth();
-                    height = view.getImage().getHeight();
-                    //Re-enable Image Modifiers once image is loaded
-                    buttons.get("Save").setDisable(false);
-                    buttons.get("Flip").setDisable(false);
-                    buttons.get("Invert").setDisable(false);
-                    buttons.get("Grayscale").setDisable(false);
-                    buttons.get("Pixelate").setDisable(false);
+                    if( view.getImage() != null ) {
+                        //Set width and height
+                        width = view.getImage().getWidth();
+                        height = view.getImage().getHeight();
+                        //Re-enable Image Modifiers once image is loaded
+                        buttons.get("Save").setDisable(false);
+                        buttons.get("Flip").setDisable(false);
+                        buttons.get("Invert").setDisable(false);
+                        buttons.get("Grayscale").setDisable(false);
+                        buttons.get("Pixelate").setDisable(false);
+                    }
                 }
             }
         });
@@ -340,9 +370,10 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
             if (file != null )
                 try {
                     saveImage(file.getAbsolutePath(), (WritableImage) view.getImage());
-                    infoPopup( new String[] {"File saved.", file.getName() } );
                 } catch ( FileNotFoundException e ){
                     infoPopup( new String[] {"File not found.", file.getName() } );
+                } finally {
+                    savePopup( file );
                 }
         });
 
@@ -376,27 +407,83 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
     }
 
     private void infoPopup( String[] messages ){
-        Stage dialog = new Stage();
-        dialog.setTitle(messages[0]);
-        dialog.initOwner(primaryStage);
-        dialog.setResizable(false);
+        Stage popup = new Stage();
+        popup.setTitle(messages[0]);
+        popup.initOwner(primaryStage);
+        popup.setResizable(false);
+        popup.initModality(Modality.APPLICATION_MODAL);
 
         VBox vBox = new VBox();
         vBox.setAlignment(Pos.BASELINE_CENTER);
 
         for( String message : messages ){
-            Label label = new Label(message);
-            label.setTextAlignment( TextAlignment.CENTER );
-            label.setAlignment( Pos.BASELINE_CENTER );
-            vBox.getChildren().add(label);
+            Text text = new Text(message);
+            text.setTextAlignment( TextAlignment.CENTER );
+            vBox.getChildren().add(text);
         }
 
         Button okButton = new Button("OK");
-        okButton.setOnAction( event -> dialog.close());
-        vBox.getChildren().add(okButton);
+        okButton.setOnAction( event -> popup.close());
+        VBox okBox = new VBox();
+        okBox.setAlignment(Pos.BASELINE_CENTER);
+        okBox.setPadding( new Insets(5) );
+        okBox.getChildren().add( okButton );
+
+        vBox.getChildren().add(okBox);
 
         Scene dialogScene = new Scene(vBox, 200, 100);
-        dialog.setScene(dialogScene);
-        dialog.show();
+        popup.setScene(dialogScene);
+        popup.show();
+    }
+
+    private void savePopup( File file ){
+        Stage popup = new Stage();
+        popup.setTitle("File Saved");
+        popup.initOwner(primaryStage);
+        popup.setResizable(false);
+        popup.initModality(Modality.APPLICATION_MODAL);
+
+        VBox vBox = new VBox();
+        vBox.setAlignment(Pos.BASELINE_CENTER);
+
+        Text savedText = new Text("File Saved" );
+        savedText.setTextAlignment(TextAlignment.CENTER);
+        savedText.setStyle("-fx-font-size: 14; -fx-font-weight: bolder");
+
+        Hyperlink fileLink = new Hyperlink(file.getName());
+        fileLink.setAlignment(Pos.BASELINE_CENTER);
+        fileLink.setTooltip( new Tooltip("Open File Location") );
+        fileLink.setBorder( null );
+        fileLink.setOnAction( event -> {
+            try {
+                Desktop.getDesktop().browse(file.getParentFile().toURI());
+            } catch (IOException ignored) { }
+        });
+
+        Button okButton = new Button("OK");
+        okButton.setOnAction( event -> popup.close());
+
+        Button openButton = new Button("Open File");
+        openButton.setOnAction( event -> {
+            try {
+                Desktop.getDesktop().open(file);
+            } catch (IOException ignored) {}
+        });
+        VBox okBox = new VBox();
+        okBox.setAlignment(Pos.BASELINE_CENTER);
+        okBox.setPadding( new Insets(5) );
+        okBox.getChildren().add( okButton );
+
+        VBox openBox = new VBox();
+        openBox.setAlignment(Pos.BASELINE_CENTER);
+        openBox.setPadding( new Insets(5) );
+        openBox.getChildren().add( openButton );
+
+
+        vBox.getChildren().addAll( savedText, fileLink, openBox, okBox );
+
+        Scene dialogScene = new Scene(vBox, 200, 125);
+        popup.setScene(dialogScene);
+        popup.show();
     }
 }
