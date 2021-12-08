@@ -337,6 +337,7 @@ public class ImageManipulator extends Application implements ImageManipulatorInt
         FileChooser fileChooser = new FileChooser();
         FileChooser.ExtensionFilter fileFilter = new FileChooser.ExtensionFilter("Portable Pixel Map", "*.ppm");
         fileChooser.getExtensionFilters().add(fileFilter);
+        fileChooser.setInitialDirectory(new File("./"));
 
         //Event handlers for buttons
 
